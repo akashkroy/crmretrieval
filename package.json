@@ -1,0 +1,22 @@
+{
+  "name": "cron-jobs-node",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "start": "nodemon server.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "express": "^4.16.3",
+    "express-winston": "^2.6.0",
+    "fs": "0.0.1-security",
+    "mysql": "^2.16.0",
+    "node-cron": "^1.2.1",
+    "nodemon": "^1.18.3",
+    "ssh2-sftp-client": "^3.1.0",
+    "winston": "^3.0.0"
+  }
+}
