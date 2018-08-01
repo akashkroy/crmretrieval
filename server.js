@@ -68,34 +68,34 @@ const logDownload = (filename) => {
 	)
 }
 
-// const wasFileImported = (filename) => {		
-// 	con.query(`CALL wasFileImported('${filename}')`, (err, results) => {
-// 		console.log('03 Running query');	
-// 		if (err) {
-// 			console.log('04a error path');
-// 			logEntry('error', `Error searching database: ${err}`);
-// 			return false;
-// 		}
-// 		console.log('04b no error');
-// 		result = results[0][0]['importCheck'];
-// 		console.log('05 result variable = ', result);
-// 		return result;
-// 	});	
-// }
+const isFileCSV = (filename) => {
+	let result = '';
+
+	return new Promise( (resolve, reject) => {
+		if (filename.endsWith('.csv')) {
+			result = 'true';
+			resolve(result);
+		} else {
+			result = 'false';
+			resolve(result);
+		}
+	});
+}
+
 
 const wasFileImported = (filename) => {		
+	// Return a new promise
 	return new Promise( (resolve, reject) => {
+		// Core function
 		con.query(`CALL wasFileImported('${filename}')`, (err, results) => {
-			console.log('03 Running query');	
+			console.log('02 Checking if file was previously imported.');	
 			if (err) {
-				console.log('04a error path');
 				logEntry('error', `Error searching database: ${err}`);
-				return false;
+				reject(Error('false'));
+			} else {
+				result = results[0][0]['importCheck'];
+				resolve(result);
 			}
-			console.log('04b no error');
-			result = results[0][0]['importCheck'];
-			console.log('05 result variable = ', result);
-			return result;
 		})
 	});
 }
@@ -126,35 +126,86 @@ const localUrl = config.local.downloadDestination;
 		logEntry('info', `connected to ${config.destination.host}`);
 		return sftp.list(ordersUrl);
 
-	}).then((data) => {	
+	}).then((data) => {
 		fileList = [];
 		Object.entries(data).forEach(([key, val]) => {
 			fileList.push(val['name']);
 		});
-
+		return fileList;
+	}).then((fileList) => {
 		fileList.forEach((file) => {
-			if (file.endsWith('.csv')) {
-				console.log('01 File ends with csv');
-				logEntry('info', `found file at CRM FTP site: ${file}`);
 
-				console.log('02 Calling importCheck function with filename ', file);
-				var importCheck = wasFileImported(file).then(() => {
-					console.log('06 importCheck variable: ', importCheck);	
-				});
-				
+			isFileCSV(file).then((result) => {
+				console.log(`01a File ${file} ends with csv? ${result}`);
+				return result.toLowerCase();
+			}).then((result) => {
+				if (result === 'false') {
+					console.log('01b Not csv, log it and skip to next: ', result);
+					return;
+				} else if (result === 'true') {
+					console.log('01b It is csv, go to next: ', result)
+				}
+			}).then(() => {
+				wasFileImported('file').then((result) => {
+					console.log('03 checked import, result: ', result);
+					return result.toLowerCase();
+				}).then((result) => {
+					switch(result) {
+						case 'false':
+							console.log('04a download file and log it');
+							break;
+						case 'true':
+							console.log('04b skip it and log the skip');
+							break;
+						default:
+							console.log('04c unknown error, log the skip');							
+					}
+					
+				})				
+			})		
+		});
+	});
+
+		// fileList.forEach((file) => {
+
+		// 	isFileCSV(file).then((result) => {
+		// 		console.log(`01a File ${file} ends with csv? ${result}`);
+		// 		return result.toLowerCase();
+		// 	}).then((result) => {
+		// 		if (result === 'false') {
+		// 			console.log('01b Not csv, log it and skip to next: ', result);
+		// 			return;
+		// 		} else if (result === 'true') {
+		// 			console.log('01b It is csv, go to next: ', result)
+		// 		}
+		// 	}).then(() => {
+		// 		wasFileImported('file').then((result) => {
+		// 			console.log('03 checked import, result: ', result);
+		// 			return result.toLowerCase();
+		// 		}).then((result) => {
+		// 			switch(result) {
+		// 				case 'false':
+		// 					console.log('04a download file and log it');
+		// 					break;
+		// 				case 'true':
+		// 					console.log('04b skip it and log the skip');
+		// 					break;
+		// 				default:
+		// 					console.log('04c unknown error, log the skip');							
+		// 			}
+					
+		// 		})				
+		// 	})
 
 
 
 
+				// 02 check if file was already imported
 
-				//console.log('importCheck: ', importCheck);
-				if ( importCheck === true) {
-					logEntry('info', `${file} previously imported. Skipping.`);
-				} else {
-					sftp.fastGet(ordersUrl + file, localUrl + file);
-					logEntry('info', `downloaded file ${file}`);
-					logDownload(file);
-				};					
+
+
+				// 05 next
+			
 
 				// downloadFile();
 
@@ -175,12 +226,12 @@ const localUrl = config.local.downloadDestination;
 				// 		logDownload(file);
 				// 	};					
 				// }
-			}
-		})
 
-	}).catch((err) => {
-		console.log(err, 'catch error');
-	});
+	// 	})
+
+	// }).catch((err) => {
+	// 	console.log(err, 'catch error');
+	// });
 // });
 
 // cronJob.start();
