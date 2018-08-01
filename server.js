@@ -62,15 +62,11 @@ const logDownload = (filename) => {
 			logEntry('error', `Error logging download in database: ${err}`);
 			return;
 		}
-
-	   // console.log(results[2][0]['@import_log_id']);
 	  }
 	)
 }
 
 const isFileCSV = (filename) => {
-	let result = '';
-
 	return new Promise( (resolve, reject) => {
 		if (filename.endsWith('.csv')) {
 			result = 'true';
@@ -82,13 +78,11 @@ const isFileCSV = (filename) => {
 	});
 }
 
-
-const wasFileImported = (filename) => {		
+const wasFilePreviouslyImported = (filename) => {		
 	// Return a new promise
 	return new Promise( (resolve, reject) => {
 		// Core function
-		con.query(`CALL wasFileImported('${filename}')`, (err, results) => {
-			console.log('02 Checking if file was previously imported.');	
+		con.query(`CALL wasFileImported('${filename}')`, (err, results) => {			
 			if (err) {
 				logEntry('error', `Error searching database: ${err}`);
 				reject(Error('false'));
@@ -100,6 +94,36 @@ const wasFileImported = (filename) => {
 	});
 }
 
+const importFile = (file) => {
+	logEntry('info', `Found remote file ${file}`);	
+	
+	return isFileCSV(file).then((result) => {		
+		result = result.toLowerCase();
+		return result;
+	}).then((result) => {
+		if (result === 'false') {			
+			logEntry('info', `${file} is not a CSV file. Skipping file.`);			
+		} else if (result === 'true') {	
+			logEntry('info', `${file} is a CSV file.`);		
+			return wasFilePreviouslyImported(file).then((result) => {
+				return result.toLowerCase();
+			}).then((result) => {
+				switch(result) {
+					case 'false':
+						sftp.fastGet(ordersUrl + file, localUrl + file);
+						logDownload(file);
+						break;
+					case 'true':
+						logEntry('info', `${file} has already been imported. Skipping file.`);
+						break;
+					default:
+						logEntry('info', `Unknown error checking database for record of previous import of ${file} .`);	
+				}			
+			})			
+		}
+				
+	})				
+}
 
 // Set up SFTP variables and config
 let sftp = new client();
@@ -120,118 +144,27 @@ const localUrl = config.local.downloadDestination;
 // 	console.log('Running task every minute');
 
 	// Connect and retrieve
-	logEntry('info', `attempting to connnect to ${config.destination.host}`);
+logEntry('info', `attempting to connnect to ${config.destination.host}`);
+console.log('Application started.');
 
-	sftp.connect(crmConfig).then(() => {
-		logEntry('info', `connected to ${config.destination.host}`);
-		return sftp.list(ordersUrl);
-
-	}).then((data) => {
-		fileList = [];
-		Object.entries(data).forEach(([key, val]) => {
-			fileList.push(val['name']);
-		});
-		return fileList;
-	}).then((fileList) => {
-		fileList.forEach((file) => {
-
-			isFileCSV(file).then((result) => {
-				console.log(`01a File ${file} ends with csv? ${result}`);
-				return result.toLowerCase();
-			}).then((result) => {
-				if (result === 'false') {
-					console.log('01b Not csv, log it and skip to next: ', result);
-					return;
-				} else if (result === 'true') {
-					console.log('01b It is csv, go to next: ', result)
-				}
-			}).then(() => {
-				wasFileImported('file').then((result) => {
-					console.log('03 checked import, result: ', result);
-					return result.toLowerCase();
-				}).then((result) => {
-					switch(result) {
-						case 'false':
-							console.log('04a download file and log it');
-							break;
-						case 'true':
-							console.log('04b skip it and log the skip');
-							break;
-						default:
-							console.log('04c unknown error, log the skip');							
-					}
-					
-				})				
-			})		
-		});
+sftp.connect(crmConfig).then(() => {	
+	logEntry('info', `connected to ${config.destination.host}`);
+	return sftp.list(ordersUrl);
+}).then((data) => {
+	fileList = [];
+	Object.entries(data).forEach(([key, val]) => {
+		fileList.push(val['name']);
 	});
+	return fileList;
+}).then((fileList) => {
+	let promiseChain = Promise.resolve()
 
-		// fileList.forEach((file) => {
+	fileList.forEach((file) => {
+		promiseChain = promiseChain.then(() => {
+			return importFile(file)
+		})
+	})
+});
 
-		// 	isFileCSV(file).then((result) => {
-		// 		console.log(`01a File ${file} ends with csv? ${result}`);
-		// 		return result.toLowerCase();
-		// 	}).then((result) => {
-		// 		if (result === 'false') {
-		// 			console.log('01b Not csv, log it and skip to next: ', result);
-		// 			return;
-		// 		} else if (result === 'true') {
-		// 			console.log('01b It is csv, go to next: ', result)
-		// 		}
-		// 	}).then(() => {
-		// 		wasFileImported('file').then((result) => {
-		// 			console.log('03 checked import, result: ', result);
-		// 			return result.toLowerCase();
-		// 		}).then((result) => {
-		// 			switch(result) {
-		// 				case 'false':
-		// 					console.log('04a download file and log it');
-		// 					break;
-		// 				case 'true':
-		// 					console.log('04b skip it and log the skip');
-		// 					break;
-		// 				default:
-		// 					console.log('04c unknown error, log the skip');							
-		// 			}
-					
-		// 		})				
-		// 	})
-
-
-
-
-				// 02 check if file was already imported
-
-
-
-				// 05 next
-			
-
-				// downloadFile();
-
-				// async function downloadFile() {
-				// 	console.log('01 File ends with csv');
-				// 	logEntry('info', `found file at CRM FTP site: ${file}`);
-
-				// 	console.log('02 Calling importCheck function with filename ', file);
-				// 	var importCheck = await wasFileImported(file);
-				// 	console.log('06 importCheck variable: ', importCheck);
-
-				// 	//console.log('importCheck: ', importCheck);
-				// 	if ( importCheck === true) {
-				// 		logEntry('info', `${file} previously imported. Skipping.`);
-				// 	} else {
-				// 		sftp.fastGet(ordersUrl + file, localUrl + file);
-				// 		logEntry('info', `downloaded file ${file}`);
-				// 		logDownload(file);
-				// 	};					
-				// }
-
-	// 	})
-
-	// }).catch((err) => {
-	// 	console.log(err, 'catch error');
-	// });
-// });
 
 // cronJob.start();
