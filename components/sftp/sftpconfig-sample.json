@@ -1,0 +1,13 @@
+{
+	"crm": {
+		"host": "www.yourcrm.com",
+		"port": "",
+		"username": "user",
+		"password": "password",
+		"ordersdir": "/path/",
+		"ordersretrieveddir": "/path/path/"
+	},
+	"local": {
+		"downloadDestination": "C:\\pathname\\"
+	}
+}

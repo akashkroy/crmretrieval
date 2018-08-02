@@ -1,2 +1,12 @@
-/config/config.json
-/sql/db.sql
+# DB
+./components/db/db.sql
+./components/db/dbconfig.json
+
+# Log
+./components/log/logconfig.json
+
+# SFTP
+./components/sftp/sftpconfig.json
+
+# App
+/config/appconfig.json

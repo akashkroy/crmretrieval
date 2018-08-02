@@ -2,7 +2,7 @@
   "name": "cron-jobs-node",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
+  "main": "",
   "scripts": {
     "start": "nodemon server.js"
   },
