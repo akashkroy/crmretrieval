@@ -119,7 +119,26 @@ const importFile = (file) => {
 					default:
 						logEntry('info', `Unknown error checking database for record of previous import of ${file} .`);	
 				}			
-			})			
+			})	
+			// First, let's move some stuff (logging) into separate files
+
+			// Create load table for file
+
+			// Write stored procedure to import file to table
+
+			// Call sproc to load file; log result
+
+			// Create staging table mimicking load file file format
+
+			// Write sproc to load data to staging table; delete from import
+
+			// Call sproc to load data to staging table; log the load
+
+			// Insert record into another table that indicates this prerequisite is loaded and ready; not yet merged into final load file
+
+			// Compare results to manually-generated file (have to create a copy of legacy FileCheck.py without other loads and all of anon's transforms)
+
+			//
 		}
 				
 	})				
