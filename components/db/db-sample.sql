@@ -46,6 +46,7 @@ DROP TABLE IF EXISTS `source_file`;
 CREATE TABLE IF NOT EXISTS `source_file` (
 	source_file_id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
 	source_file_name_body VARCHAR(50) NOT NULL,
+	source_file_description VARCHAR(50),
 	source_id INT UNSIGNED NOT NULL,
 	file_type_id INT UNSIGNED NOT NULL,
 	file_function_id INT UNSIGNED NOT NULL,
@@ -63,14 +64,14 @@ SELECT file_type_id INTO @fileTypeTXT FROM file_type WHERE file_type = 'txt';
 SELECT file_function_id INTO @fileFunctionPrereq FROM file_function WHERE file_function = 'prerequisite';
 SELECT file_function_id INTO @fileFunctionLoad FROM file_function WHERE file_function = 'load file';
 
-INSERT INTO source_file ( source_file_name_body, source_id, file_type_id, file_function_id, active ) 
-VALUES( 'InternalFile1 Sales', @sourceABC, @fileTypeTXT, @fileFunctionLoad, 1 );
+INSERT INTO source_file ( source_file_name_body, source_file_description, source_id, file_type_id, file_function_id, active ) 
+VALUES( 'InternalFile1 Sales', 'ABC sales file for ABC products', @sourceABC, @fileTypeTXT, @fileFunctionLoad, 1 );
 
-INSERT INTO source_file ( source_file_name_body, source_id, file_type_id, file_function_id, active ) 
-VALUES( '_InternalFile2 Sales', @sourceABC, @fileTypeSQL, @fileFunctionPrereq, 1 );
+INSERT INTO source_file ( source_file_name_body, source_file_description, source_id, file_type_id, file_function_id, active ) 
+VALUES( '_InternalFile2 Sales', 'ABC sales file for ABC products', @sourceABC, @fileTypeSQL, @fileFunctionPrereq, 1 );
 
-INSERT INTO source_file ( source_file_name_body, source_id, file_type_id, file_function_id, active ) 
-VALUES( 'daily', @sourceCRM, @fileTypeCSV, @fileFunctionPrereq, 1 );
+INSERT INTO source_file ( source_file_name_body, source_file_description, source_id, file_type_id, file_function_id, active ) 
+VALUES( 'daily', 'ABC preqrequisite for ABC sales file', @sourceCRM, @fileTypeCSV, @fileFunctionPrereq, 1 );
 
 DROP TABLE IF EXISTS `source_file_prerequisite`;
 
@@ -253,4 +254,29 @@ BEGIN
 END$$
 DELIMITER ;
 
+DROP TABLE IF EXISTS `crm_data_import`;
+
+CREATE TABLE IF NOT EXISTS `crm_data_import` (
+	crm_data_import_id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+	import_datetime TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+	order_num INTEGER  NOT NULL,
+	first_name VARCHAR(50) NOT NULL,
+	last_name VARCHAR(50) NOT NULL,
+	address_1 VARCHAR(50) NOT NULL,
+	address_2 VARCHAR(50),
+	city VARCHAR(50) NOT NULL,
+	state VARCHAR(2) NOT NULL,
+	zip VARCHAR(10) NOT NULL,
+	date_of_birth DATE,
+	home_phone INTEGER NOT NULL,
+	cc_first_six INTEGER NOT NULL,
+	cc_last_four INTEGER NOT NULL,
+	exp_date VARCHAR(7) NOT NULL,
+	sale_date VARCHAR(21) NOT NULL,
+	sales_person VARCHAR(20),
+	closer VARCHAR(20),
+	email VARCHAR(16),
+	product_id INTEGER  NOT NULL,
+	transformed TINYINT(1) NOT NULL DEFAULT 0
+);
 

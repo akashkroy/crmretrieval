@@ -19,6 +19,36 @@ con.connect((err) => {
 	log.logEntry('info', 'Connected to database');
 });
 
+// const getCRMHeaderRow = (sourceFileID) => {
+// 	con.query(
+// 	  `CALL crmCSVHeaderRow(${sourceFileID});`,
+// 	  (err, results) => {
+// 		if (err) {
+// 			log.logEntry('error', `Error getting CSV header row for source file ID ${sourceFileID}: ${err}`);
+// 			return;
+// 		} else {			
+// 			return results[0];
+// 		}
+// 	  }
+// 	)
+// }
+
+// const getCRMHeaderRow = (sourceFileID) => {		
+// 	// Return a new promise
+// 	return new Promise( (resolve, reject) => {
+// 		// Core function
+// 		con.query(`CALL crmCSVHeaderRow(${sourceFileID});`, (err, results) => {			
+// 			if (err) {
+// 				log.logEntry('error', `Error getting CSV header row for source file ID ${sourceFileID}: ${err}`);
+// 				reject(Error('false'));
+// 			} else {
+// 				result = results[0];				
+// 				resolve(result);
+// 			}
+// 		})
+// 	});
+// }
+
 const logDownload = (filename) => {
 	con.query(
 	  `SET @import_log_id = 0; CALL logFileImport('${filename}', 2, 1, 1, @import_log_id ); SELECT @import_log_id`,
@@ -26,6 +56,8 @@ const logDownload = (filename) => {
 		if (err) {
 			log.logEntry('error', `Error logging download in database: ${err}`);
 			return;
+		} else {
+			log.logEntry('info', `Downloaded file ${filename}.`);	
 		}
 	  }
 	)
@@ -49,6 +81,7 @@ const wasFilePreviouslyImported = (filename) => {
 
 module.exports = {
 	con: con,
+	// getCRMHeaderRow: getCRMHeaderRow,
 	logDownload: logDownload,
 	wasFilePreviouslyImported: wasFilePreviouslyImported
 }

@@ -1,3 +1,6 @@
+# CSV
+/components/csv/csvconfig.json
+
 # DB
 /components/db/db.sql
 /components/db/dbconfig.json

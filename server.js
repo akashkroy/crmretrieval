@@ -18,9 +18,11 @@ console.log('Application started.');
 // cronJob.start();
 sftp.connectAndRetrieve();
 
-// Create load table for file
+// Parse CSV with Node
 
-// Write stored procedure to import file to table
+// Create stored procedure to load data
+
+// Load all CSV data from array into SQL, log result
 
 // Call sproc to load file; log result
 

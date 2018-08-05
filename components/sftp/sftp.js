@@ -1,4 +1,5 @@
 const client = require('ssh2-sftp-client');
+const csv = require('../csv/csv');
 const db = require('../db/db');
 const files = require('../files/files');
 const log = require('../log/log');
@@ -59,6 +60,11 @@ const importFile = (file) => {
 					case 'false':
 						sftpcrm.fastGet(ordersUrl + file, localUrl + file);
 						db.logDownload(file);
+						log.logEntry('info', `Begin database import of ${file}.`);	
+						let importResult = csv.importCSV(localUrl + file);
+						// console.log(importResult);
+						// Log import result
+						// If successful, update database record for this file
 						break;
 					case 'true':
 						log.logEntry('info', `${file} has already been imported. Skipping file.`);
