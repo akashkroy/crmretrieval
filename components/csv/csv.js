@@ -3,10 +3,10 @@ const db = require('../db/db');
 const fs = require('fs');
 const url = require('url');
 
-const importCSV = (file) => {	
+const importCSV = (importLogId, file) => {	
 	let crmHeaderRowJson = csvconfig.crmcsvheader;
 	const crmHeaderRow = Object.keys(crmHeaderRowJson).map(function(k) { return crmHeaderRowJson[k] });
-	
+	console.log('csv.importCSV importLogId: ', importLogId);
 	try {
 		fs.readFile(file, (error, data) => {
 			if (error) {
@@ -31,7 +31,14 @@ const importCSV = (file) => {
 				}
 				jsonObj.push(obj);
 			}
-			console.log(jsonObj);
+
+			//db.crmRecordImport(1, jsonObj[0]);
+
+
+			// for (i=0; i < jsonObj.length; i++) {
+			// 	//CALL crmCSVHeaderRow(8)	
+			// }
+			
 		})
 
 		// Next loop through and call sproc to insert each row into database

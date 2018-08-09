@@ -259,7 +259,7 @@ DROP TABLE IF EXISTS `crm_data_import`;
 CREATE TABLE IF NOT EXISTS `crm_data_import` (
 	crm_data_import_id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
 	import_datetime TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-	order_num INTEGER  NOT NULL,
+	order_num INTEGER NOT NULL,
 	first_name VARCHAR(50) NOT NULL,
 	last_name VARCHAR(50) NOT NULL,
 	address_1 VARCHAR(50) NOT NULL,
@@ -269,14 +269,18 @@ CREATE TABLE IF NOT EXISTS `crm_data_import` (
 	zip VARCHAR(10) NOT NULL,
 	date_of_birth DATE,
 	home_phone INTEGER NOT NULL,
+	email VARCHAR(16),
 	cc_first_six INTEGER NOT NULL,
 	cc_last_four INTEGER NOT NULL,
 	exp_date VARCHAR(7) NOT NULL,
 	sale_date VARCHAR(21) NOT NULL,
 	sales_person VARCHAR(20),
-	closer VARCHAR(20),
-	email VARCHAR(16),
-	product_id INTEGER  NOT NULL,
-	transformed TINYINT(1) NOT NULL DEFAULT 0
+	closer VARCHAR(20),	
+	product_id INTEGER NOT NULL,
+	source_file_id INT UNSIGNED,
+	transformed TINYINT(1) NOT NULL DEFAULT 0,
+	CONSTRAINT fk_crm_data_import__source_file_id FOREIGN KEY (source_file_id) REFERENCES source_file(source_file_id)
 );
+
+
 

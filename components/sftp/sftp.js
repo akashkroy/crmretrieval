@@ -52,26 +52,37 @@ const importFile = (file) => {
 		if (result === 'false') {			
 			log.logEntry('info', `${file} is not a CSV file. Skipping file.`);			
 		} else if (result === 'true') {	
+			importLogId = 0;
 			log.logEntry('info', `${file} is a CSV file.`);		
-			return db.wasFilePreviouslyImported(file).then((result) => {
-				return result.toLowerCase();
-			}).then((result) => {
-				switch(result) {
+			return db.wasFilePreviouslyImported(file)
+				.then((result) => {
+					return result.toLowerCase();
+			}).then((result) => {												
+				switch(result) {										
 					case 'false':
-						sftpcrm.fastGet(ordersUrl + file, localUrl + file);
-						db.logDownload(file);
-						log.logEntry('info', `Begin database import of ${file}.`);	
-						let importResult = csv.importCSV(localUrl + file);
-						// console.log(importResult);
-						// Log import result
-						// If successful, update database record for this file
+						return sftpcrm.fastGet(ordersUrl + file, localUrl + file)
+							.then((result) => {
+								return db.logDownload(file);
+							}).then((result) => {
+								importLogId = result;
+								return importLogId;
+							})
 						break;
 					case 'true':
 						log.logEntry('info', `${file} has already been imported. Skipping file.`);
 						break;
 					default:
-						log.logEntry('info', `Unknown error checking database for record of previous import of ${file} .`);	
-				}			
+						log.logEntry('info', `Unknown error checking database for record of previous import of ${file} .`);
+				}
+				return importLogId;			
+			}).then((result) => {
+				if ( result != 0 ) {					
+					log.logEntry('info', `Begin database import of ${file}.`);
+					let importResult = csv.importCSV(result, localUrl + file);
+					//console.log(importResult); // Returns true or false
+					// Log import result
+					// If successful, update database record for this file
+				}				
 			})
 		}				
 	})				
