@@ -1,0 +1,25 @@
+{
+	"crmcsvheader": {
+		"col01": "order_num",
+		"col02": "first_name",
+		"col03": "last_name",
+		"col04": "address_1",
+		"col05": "address_2",
+		"col06": "city",
+		"col07": "state",
+		"col08": "zip",
+		"col09": "date_of_birth",
+		"col10": "home_phone",
+		"col11": "cc_first_six",
+		"col12": "cc_last_four",
+		"col13": "exp_date",
+		"col14": "sale_date",
+		"col15": "sales_person",
+		"col16": "closer",
+		"col17": "email",
+		"col18": "product_id"
+	},
+	"sourceinfo": {
+		"sourcefileid": 8
+	}
+}

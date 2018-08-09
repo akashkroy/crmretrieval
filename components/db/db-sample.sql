@@ -206,11 +206,9 @@ CREATE TABLE IF NOT EXISTS `import_log` (
 	import_log_id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
 	import_datetime TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
 	file_name VARCHAR(255),
-	source_id INT UNSIGNED NOT NULL,
-	file_type_id INT UNSIGNED NOT NULL,
+	source_file_id INT UNSIGNED NOT NULL,
 	import_status_id INT UNSIGNED NOT NULL,
-	CONSTRAINT fk_import_log__file_type_id FOREIGN KEY (file_type_id) REFERENCES file_type(file_type_id),
-	CONSTRAINT fk_import_log__source_id FOREIGN KEY (source_id) REFERENCES source(source_id),
+	CONSTRAINT fk_import_log__source_file_id FOREIGN KEY (source_file_id) REFERENCES source_file(source_file_id),
 	CONSTRAINT fk_import_log__import_status_id FOREIGN KEY (import_status_id) REFERENCES import_status(import_status_id)
 );
 
@@ -239,16 +237,15 @@ DROP PROCEDURE IF EXISTS `logFileImport`$$
 
 CREATE PROCEDURE `logFileImport`(
 	IN fileName VARCHAR(255),
-	IN sourceID INT,
-	IN fileTypeID INT,
+	IN sourceFileID INT,
 	IN importStatusID INT,
 	OUT import_log_id INT
 )
-/* TEST: SET @import_log_id = 0; CALL logFileImport('daily072418', 2, 1, 1, @import_log_id ); SELECT @import_log_id  */
+/* TEST: SET @import_log_id = 0; CALL logFileImport('daily072418', 2, 1, @import_log_id ); SELECT @import_log_id  */
 BEGIN
 
-	INSERT INTO import_log ( file_name, source_id, file_type_id, import_status_id )
-	VALUES ( fileName, sourceID, fileTypeID, importStatusID );
+	INSERT INTO import_log ( file_name, source_file_id, import_status_id )
+	VALUES ( fileName, sourceFileID, importStatusID );
 	SET import_log_id = LAST_INSERT_ID();
 
 END$$
@@ -267,20 +264,92 @@ CREATE TABLE IF NOT EXISTS `crm_data_import` (
 	city VARCHAR(50) NOT NULL,
 	state VARCHAR(2) NOT NULL,
 	zip VARCHAR(10) NOT NULL,
-	date_of_birth DATE,
-	home_phone INTEGER NOT NULL,
-	email VARCHAR(16),
+	date_of_birth VARCHAR(10),
+	home_phone VARCHAR(20) NOT NULL,
+	email VARCHAR(100),
 	cc_first_six INTEGER NOT NULL,
-	cc_last_four INTEGER NOT NULL,
-	exp_date VARCHAR(7) NOT NULL,
-	sale_date VARCHAR(21) NOT NULL,
-	sales_person VARCHAR(20),
-	closer VARCHAR(20),	
+	cc_last_four VARCHAR(4) NOT NULL,
+	cc_number VARCHAR(20),
+	exp_date VARCHAR(10) NOT NULL,
+	sale_date DATETIME NOT NULL,
+	sales_person VARCHAR(50),
+	closer VARCHAR(50),	
 	product_id INTEGER NOT NULL,
-	source_file_id INT UNSIGNED,
+	import_log_id INT UNSIGNED,
 	transformed TINYINT(1) NOT NULL DEFAULT 0,
-	CONSTRAINT fk_crm_data_import__source_file_id FOREIGN KEY (source_file_id) REFERENCES source_file(source_file_id)
+	CONSTRAINT fk_crm_data_import__import_log_id FOREIGN KEY (import_log_id) REFERENCES import_log(import_log_id)
 );
 
 
+DELIMITER $$
+DROP PROCEDURE IF EXISTS `crmFileImport`$$
 
+CREATE PROCEDURE `crmFileImport`(
+	IN orderNum INTEGER,
+	IN firstName VARCHAR(50),
+	IN lastName VARCHAR(50),
+	IN address1 VARCHAR(50),
+	IN address2 VARCHAR(50),
+	IN city VARCHAR(50),
+	IN state VARCHAR(10),
+	IN zip VARCHAR(10),
+	IN dateOfBirth VARCHAR(50),
+	IN homePhone VARCHAR(20),
+	IN email VARCHAR(100),
+	IN ccFirstSix INTEGER,
+	IN ccLastFour VARCHAR(10),
+	IN expDate VARCHAR(10),
+	IN saleDate VARCHAR(50),
+	IN salesPerson VARCHAR(50),
+	IN closer VARCHAR(50),	
+	IN productId INTEGER,
+	IN importLogId INT,
+	OUT crmDataImportId INT
+)
+BEGIN
+
+	/* BEGIN COLUMN CLAUSE */
+	SET @columnClause = 'INSERT INTO crm_data_import ( 
+		order_num, first_name, last_name, address_1, address_2, city, state, zip';
+
+	IF LENGTH(dateOfBirth) > 5 THEN
+		SET @columnClause = CONCAT(@columnClause, ', date_of_birth');
+	END IF;
+
+	IF LENGTH(email) > 6 THEN
+		SET @columnClause = CONCAT(@columnClause, ', email');
+	END IF;
+
+	SET @columnClause = CONCAT(@columnClause, ', home_phone, 
+		cc_first_six, cc_last_four, exp_date,
+		sale_date, sales_person, closer, product_id, import_log_id
+		)');
+
+	/* BEGIN VALUES CLAUSE */
+	SET @valuesClause = CONCAT('VALUES ( ',
+		orderNum, ',', firstName,',', lastName,',', address1,',', address2,',', city,',', state,',', zip);
+
+	IF LENGTH(dateOfBirth) > 5 THEN
+		SET dateOfBirth = DATE_FORMAT(STR_TO_DATE(dateOfBirth,'%m/%d/%Y'), '%Y-%m-%d');
+		SET @valuesClause = CONCAT(@valuesClause, ',', dateOfBirth);
+	END IF;
+
+	IF LENGTH(email) > 6 THEN
+		SET @valuesClause = CONCAT(@valuesClause, ',', email);
+	END IF;
+
+	SET saleDate = str_to_date(saleDate, '%m/%d/%Y %h:%i:%s %p');
+
+	SET @valuesClause = CONCAT(@valuesClause, ',', homePhone, 
+		',',ccFirstSix, ',',ccLastFour, ',',expDate,
+		',',saleDate, ',',salesPerson, ',',closer, ',',productId, ',',importLogId,');');
+
+	SET @query = CONCAT(@columnClause, @valuesClause);
+
+	PREPARE stmt FROM @query;
+	EXECUTE stmt;
+	SET crmDataImportId = LAST_INSERT_ID();
+	DEALLOCATE PREPARE stmt;
+
+END$$
+DELIMITER ;

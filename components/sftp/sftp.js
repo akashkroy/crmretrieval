@@ -79,6 +79,7 @@ const importFile = (file) => {
 				if ( result != 0 ) {					
 					log.logEntry('info', `Begin database import of ${file}.`);
 					let importResult = csv.importCSV(result, localUrl + file);
+					// TODO
 					//console.log(importResult); // Returns true or false
 					// Log import result
 					// If successful, update database record for this file

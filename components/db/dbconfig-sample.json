@@ -4,5 +4,8 @@
 		"user": "user",
 		"password": "password",
 		"database": "sales_file_import"
+	},
+	"sourcefileid": {
+		"crmdaily": 8
 	}
 }

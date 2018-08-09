@@ -19,82 +19,47 @@ con.connect((err) => {
 	log.logEntry('info', 'Connected to database');
 });
 
-// const getCRMHeaderRow = (sourceFileID) => {
-// 	con.query(
-// 	  `CALL crmCSVHeaderRow(${sourceFileID});`,
-// 	  (err, results) => {
-// 		if (err) {
-// 			log.logEntry('error', `Error getting CSV header row for source file ID ${sourceFileID}: ${err}`);
-// 			return;
-// 		} else {			
-// 			return results[0];
-// 		}
-// 	  }
-// 	)
-// }
-
-// const getCRMHeaderRow = (sourceFileID) => {		
-// 	// Return a new promise
-// 	return new Promise( (resolve, reject) => {
-// 		// Core function
-// 		con.query(`CALL crmCSVHeaderRow(${sourceFileID});`, (err, results) => {			
-// 			if (err) {
-// 				log.logEntry('error', `Error getting CSV header row for source file ID ${sourceFileID}: ${err}`);
-// 				reject(Error('false'));
-// 			} else {
-// 				result = results[0];				
-// 				resolve(result);
-// 			}
-// 		})
-// 	});
-// }
-
-const crmRecordImport = (sourceFileId, recordArray) => {	
-	con.query(
-		`CALL crmFileImport(
-			'${recordArray['order_num']}'
-			, '${recordArray['first_name']}'
-			, '${recordArray['last_name']}'
-			, '${recordArray['address_1']}'
-			, '${recordArray['address_2']}'
-			, '${recordArray['city']}'
-			, '${recordArray['state']}'
-			, '${recordArray['zip']}'
-			, '${recordArray['date_of_birth']}'
-			, '${recordArray['home_phone']}'
-			, '${recordArray['email']}'
-			, '${recordArray['cc_first_six']}'
-			, '${recordArray['cc_last_four']}'
-			, '${recordArray['exp_date']}'
-			, '${recordArray['sale_date']}'
-			, '${recordArray['sales_person']}'
-			, '${recordArray['closer']}'
-			, '${recordArray['product_id']}'
-			, 
-			)`,
-	)
+const crmRecordImport = (importLogId, sourceFileId, recordArray) => {	
+	return new Promise( (resolve, reject) => {
+		// This is pretty ugly. Refactor
+		con.query(
+			`SET @crmDataImportId = 0; CALL crmFileImport(
+				'${recordArray['order_num']}' 
+				, '''${recordArray['first_name']}'''
+				, '''${recordArray['last_name']}'''
+				, '''${recordArray['address_1']}'''
+				, '''${recordArray['address_2']}'''
+				, '''${recordArray['city']}'''
+				, '''${recordArray['state']}'''
+				, '''${recordArray['zip']}'''
+				, '${recordArray['date_of_birth']}'
+				, '''${recordArray['home_phone']}'''
+				, '''${recordArray['email']}'''
+				, '${recordArray['cc_first_six']}'
+				, '''${recordArray['cc_last_four']}'''
+				, '${recordArray['exp_date'].replace('/','')}'
+				, '${recordArray['sale_date']}'
+				, '''${recordArray['sales_person']}'''
+				, '''${recordArray['closer']}'''
+				, ${recordArray['product_id']}
+				, ${importLogId}
+				, @crmDataImportId
+				); SELECT @crmDataImportId`,
+			(err, results) => {
+				if (err) {
+					console.log('error', err);
+				} else {
+					console.log('success', results);
+				}
+			})
+	});
 }
-
-// const logDownload = (filename) => {
-// 	con.query(
-// 	  `SET @import_log_id = 0; CALL logFileImport('${filename}', 2, 1, 1, @import_log_id ); SELECT @import_log_id`,
-// 	  (err, results) => {
-// 		if (err) {
-// 			log.logEntry('error', `Error logging download in database: ${err}`);
-// 			return;
-// 		} else {
-// 			log.logEntry('info', `Downloaded file ${filename}.`);
-// 			console.log('03 in logDownload function. Returning this id: ', results[2][0]['@import_log_id']);
-// 			return results[2][0]['@import_log_id'];
-// 		}
-// 	  }
-// 	)
-// }
-
 const logDownload = (filename) => {
+	const sourceFileId = dbconfig.sourcefileid.crmdaily;
+
 	return new Promise( (resolve, reject) => {
 		con.query(
-		  `SET @import_log_id = 0; CALL logFileImport('${filename}', 2, 1, 1, @import_log_id ); SELECT @import_log_id`,
+		  `SET @import_log_id = 0; CALL logFileImport('${filename}', ${sourceFileId}, 1, @import_log_id ); SELECT @import_log_id`,
 		  (err, results) => {
 			if (err) {
 				log.logEntry('error', `Error logging download in database: ${err}`);

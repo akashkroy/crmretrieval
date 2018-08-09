@@ -6,7 +6,8 @@ const url = require('url');
 const importCSV = (importLogId, file) => {	
 	let crmHeaderRowJson = csvconfig.crmcsvheader;
 	const crmHeaderRow = Object.keys(crmHeaderRowJson).map(function(k) { return crmHeaderRowJson[k] });
-	console.log('csv.importCSV importLogId: ', importLogId);
+	const sourceFileId = csvconfig.sourceinfo.sourcefileid;
+
 	try {
 		fs.readFile(file, (error, data) => {
 			if (error) {
@@ -21,7 +22,6 @@ const importCSV = (importLogId, file) => {
 			
 			// Store info for each row as a string in an object
 			arr = bufferString.split('\n');
-
 			for (i=0; i < arr.length; i++) {
 				var dataFromArray = arr[i].split(',');
 				var obj = {};
@@ -31,13 +31,12 @@ const importCSV = (importLogId, file) => {
 				}
 				jsonObj.push(obj);
 			}
-
-			//db.crmRecordImport(1, jsonObj[0]);
-
-
-			// for (i=0; i < jsonObj.length; i++) {
-			// 	//CALL crmCSVHeaderRow(8)	
-			// }
+			
+			// db.crmRecordImport(importLogId, sourceFileId, jsonObj[0]);
+			
+			for (k=0; k < jsonObj.length; k++) {
+				db.crmRecordImport(importLogId, sourceFileId, jsonObj[k]);	
+			}
 			
 		})
 
